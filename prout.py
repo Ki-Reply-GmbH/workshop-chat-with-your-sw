@@ -201,10 +201,13 @@ def main(base_path: Path):
 	main_doc_store = InMemoryStore()
 	chunks_store = DocArrayInMemorySearch.from_params(embedding=embedding_model)
 	base_path = base_path.absolute()
+	count_docs = 0
+	count_chunks = 0
 	for idx, file in enumerate(list_all_files(base_path)):
 		# if idx > 10:
 		# 	break
 		print(file)
+		count_docs += 1
 
 		r, ext = os.path.splitext(file)
 		if ext == '.py':
@@ -221,6 +224,7 @@ def main(base_path: Path):
 
 		main_doc_store.mset([(main_doc.metadata["id"], main_doc)])
 		chunks_store.add_documents(chunks)
+		count_chunks += len(chunks)
 		
 		
 	retriever = ParentDocumentRetriever(
@@ -245,7 +249,9 @@ def main(base_path: Path):
 		"context": retriever | format,
 		"input": RunnablePassthrough()
 	} | main_prompt | llm | StrOutputParser()
-	
+
+	print(f'Nb docs {count_docs}, nb_chunks: {count_chunks}')	
+ 
 	import sys
 	while True:
 		print("Ask you stupid question")
